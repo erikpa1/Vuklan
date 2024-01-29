@@ -95,7 +95,7 @@ int run_triangle()
     return EXIT_SUCCESS;
 }
 
-int main()
+int _main()
 {
     return run_triangle();
     // return run_demo();

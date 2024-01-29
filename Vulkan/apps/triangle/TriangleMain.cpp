@@ -4,7 +4,10 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <vector>
+#include <limits>
+#include <algorithm>
 #include <GLFW/glfw3.h>
+
 
 #define VK_USE_PLATFORM_WIN64_KHR
 #include <vulkan/vulkan.h>
@@ -25,17 +28,17 @@ void TriangleMain::Start()
     {
         _InitPhysicalDevice();
 
-        auto window = glfwCreateWindow(WIDTH, HEIGH, "VulkanTriangle", nullptr, nullptr);
+        _window = glfwCreateWindow(WIDTH, HEIGH, "VulkanTriangle", nullptr, nullptr);
 
         _Surface();
 
-        while (glfwWindowShouldClose(window) == false)
+        while (glfwWindowShouldClose(_window) == false)
         {
             glfwPollEvents();
         }
 
         _DeInitVulkan();
-        glfwDestroyWindow(window);
+        glfwDestroyWindow(_window);
         glfwTerminate();
     }
 }
@@ -134,7 +137,16 @@ void TriangleMain::_InitPhysicalDevice()
     {
         std::cout << "Failed to find sutiable GPU!" << std::endl;
     }
+
+    _CreateSwapChain(physicalDevice);
 }
+
+void TriangleMain::_CreateSwapChain(VkPhysicalDevice& device)
+{
+    //Skoncil som na strane 83
+    
+}
+
 
 bool TriangleMain::_IsDeviceSuitable(VkPhysicalDevice device)
 {
@@ -151,12 +163,44 @@ bool TriangleMain::_IsDeviceSuitable(VkPhysicalDevice device)
     std::cout << "[GPU VENDOR ID] " << deviceProperties.vendorID << std::endl;
     std::cout << "[GPU MAX IMAGE DIMENSION 2D] " << deviceProperties.limits.maxImageDimension2D << std::endl;
 
-
     return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader;
 }
 
 void TriangleMain::_Surface()
 {
     VkSurfaceKHR surface;
+}
 
+VkPresentModeKHR TriangleMain::_GetPresentMode()
+{
+    return VK_PRESENT_MODE_FIFO_KHR;
+}
+
+VkExtent2D TriangleMain::_ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilites)
+{
+    if (capabilites.currentExtent.width != std::numeric_limits<uint32_t>::max())
+    {
+        return capabilites.currentExtent;
+    }
+    else
+    {
+        int width, height;
+        glfwGetFramebufferSize(_window, &width, &height);
+
+        VkExtent2D actualExtent = {
+            static_cast<uint32_t>(width),
+            static_cast<uint32_t>(height)
+        };
+
+        actualExtent.width = std::clamp(actualExtent.width,
+                                        capabilites.minImageExtent.width,
+                                        capabilites.maxImageExtent.width
+        );
+        actualExtent.height = std::clamp(actualExtent.height,
+                                         capabilites.minImageExtent.height,
+                                         capabilites.maxImageExtent.height
+        );
+
+        return actualExtent;
+    }
 }
